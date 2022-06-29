@@ -2,13 +2,14 @@ const xhr = new XMLHttpRequest();
 
 xhr.open(
   'get',
-  'https://od.moi.gov.tw/api/v1/rest/datastore/301000000A-002037-005.json',
+  'https://raw.githubusercontent.com/newstarellie/API-Echart-6-29/main/301000000A-002037-005.json',
   true
 );
 
 xhr.send(null);
 
 xhr.onload = function () {
-  console.log(xhr);
-  console.log(xhr.responseText);
+  let data = JSON.parse(xhr.responseText);
+  console.log(data.result.records[0]);
+  document.querySelector('.dataAll').textContent = data.result;
 };
