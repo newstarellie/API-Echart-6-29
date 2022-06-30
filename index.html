@@ -5,12 +5,52 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="index.js"></script>
+
+        <script src="count.js"></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.3.3/echarts.min.js'></script>
         <title>Document</title>
     </head>
 
     <body>
         <div class="dataAll">123</div>
+        <div id="chartmain" style="width:600px; height: 400px;"></div>
+
+
+
+
+
+        <script>
+            var option = {
+                title: {
+                    text: '婚姻統計',
+                },
+                tooltip: {},
+                legend: {
+                    data: ['政府統計来源'],
+                },
+                xAxis: {
+                    type: 'category'
+                    data: ['相同性別', '不同性別'],
+                },
+                yAxis: {},
+                series: [
+                    {
+                        name: '數量',
+                        type: 'bar',
+                        data: [12, 456],
+                    },
+                ],
+            };
+            //初始化echarts实例
+            var myChart = echarts.init(document.getElementById('chartmain'));
+
+            //使用制定的配置项和数据显示图表
+            myChart.setOption(option);
+
+
+
+        </script>
+
 
 
     </body>
