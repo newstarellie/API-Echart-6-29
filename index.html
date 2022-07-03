@@ -1,58 +1,259 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
     <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        <script src="count.js"></script>
-        <script src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.3.3/echarts.min.js'></script>
-        <title>Document</title>
+        <meta charset="utf-8">
+        <title>第一个 ECharts 实例</title>
+        <!-- 引入 echarts.js -->
+        <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
     </head>
 
     <body>
-        <div class="dataAll">123</div>
+        <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
         <div id="chartmain" style="width:600px; height: 400px;"></div>
+        <div id="chartPie" style="width:600px; height: 400px;"></div>
+        <div id="chart3" style="width:600px; height: 400px;"></div>
+        <div id="chart4" style="width:600px; height: 400px;"></div>
+        <script type="text/javascript">
+            // 基于准备好的dom，初始化echarts实例
+
+            get(
+                'https://api.kcg.gov.tw/api/service/Get/99c8d84a-3553-4fe7-8321-f2f85c7a7715'
+            ).then((result) => {
+                console.log('成功載入');
+                initChart("chartmain", option, result)
+                initChart("chartPie", option2, result)
+                initChart("chart3", option3, result)
+                initChart("chart4", option4, result)
 
 
+            }).catch((err) => {
+                console.log('error');
+
+            });
 
 
+            function countCate(data) {
+                let arr = [['category', 'caseHappened', 'caseSolved']];
+                //[1全般刑案,456 ,7896]
 
-        <script>
+                let cate1 = ['1全般刑案', 0, 0];
+                let cate2 = ['2暴力犯罪', 0, 0];
+                let cate3 = ['3竊盜案件', 0, 0];
+                let setCaseHappened = '發生數(件)';
+                let setCaseSolved = '破獲數(件)';
+                let comma = ',';
+
+                //一年的數據
+                for (let i = 0; i < data.length / 3; i++) {
+                    let caseHappenedNum = data[i][setCaseHappened].replace(comma, '');
+                    caseHappenedNum = Number(caseHappenedNum);
+                    let caseSolvedNum = data[i][setCaseSolved].replace(comma, '');
+                    caseSolvedNum = Number(caseSolvedNum);
+                    switch (data[i].案件別) {
+                        //累積計算
+                        case '1全般刑案':
+                            //算完再放上去
+                            cate1[1] += caseHappenedNum;
+                            cate1[2] += caseSolvedNum;
+                            break;
+                        case '2暴力犯罪':
+                            //算完再放上去
+                            cate2[1] += caseHappenedNum;
+                            cate2[2] += caseSolvedNum;
+                            break;
+                        case '3竊盜案件':
+                            //算完再放上去
+                            cate3[1] += caseHappenedNum;
+                            cate3[2] += caseSolvedNum;
+                            break;
+                    }
+                }
+                arr.push(cate1);
+                arr.push(cate2);
+                arr.push(cate3);
+
+                console.log(`countCate執行成功${arr}`);
+
+                return arr;
+            }
+
+            function get(url) {
+                return new Promise((resolve, reject) => {
+                    // 定義 Http request
+                    var req = new XMLHttpRequest();
+                    req.open('GET', url);
+                    req.onload = function () {
+                        //todo 應該是要把catch寫在外面 寫在then之後? 
+                        //但沒時間了
+                        if (req.status == 200) {
+                            data = req.responseText;
+                            data = JSON.parse(data).data;
+
+                            countCate(data);
+                            let dataset = countCate(data);
+                            console.log(dataset);
+                            console.log(countCate(data));
+                            console.log('get成功')
+
+                            resolve(dataset);
+                        } else {
+                            // 使用 reject 自訂失敗的結果
+                            console.log('get失敗')
+                            reject(new Error(req));
+                        }
+                    };
+                    req.send();
+                });
+            }
+            function initChart(DOMid, option, data) {
+                if (!data) {
+                    option.dataset.source = []
+                } else {
+                    option.dataset.source = data;
+
+                }
+                var p = new Promise(function (resolve, reject) {
+                    let DOM = document.getElementById(DOMid);
+                    //异步操作
+                    let myChart = echarts.init(DOM);
+                    myChart.setOption(option);
+
+                });
+            }
+
             var option = {
-                title: {
-                    text: '婚姻統計',
-                },
+                legend: {},
                 tooltip: {},
-                legend: {
-                    data: ['政府統計来源'],
+                dataset: {
                 },
-                xAxis: {
-                    type: 'category'
-                    data: ['相同性別', '不同性別'],
+                xAxis: [
+                    { type: "category", gridIndex: 0 }, //
+                    { type: "category", gridIndex: 1 } //??
+                ],
+                yAxis: [{ gridIndex: 0 }, { gridIndex: 1 }],
+                grid: [{ bottom: "55%" }, { top: "55%" }],
+                //每個grid距離頂部 與 尾部的距離
+                series: [
+                    // 这几个系列会出现在第一个直角坐标系中，每个系列对应到 dataset 的每一行。
+                    //這是上面的grid
+                    { type: "bar", seriesLayoutBy: "row" },
+                    { type: "bar", seriesLayoutBy: "row" },
+                    { type: "bar", seriesLayoutBy: "row" },
+                    // 这几个系列会出现在第二个直角坐标系中，每个系列对应到 dataset 的每一列。
+                    //這是下面的grid
+                    { type: "bar", xAxisIndex: 1, yAxisIndex: 1 },
+                    { type: "bar", xAxisIndex: 1, yAxisIndex: 1 },
+
+                ]
+            };
+
+            var option2 = {
+                legend: {},
+                tooltip: {},
+                dataset: {
                 },
-                yAxis: {},
                 series: [
                     {
-                        name: '數量',
-                        type: 'bar',
-                        data: [12, 456],
+                        center: ['25%', '50%'],
+                        seriesLayoutBy: "column",
+                        name: "案件類別",
+                        type: "pie", // 设置图表类型为饼图
+                        radius: "50%", // 饼图的半径，外半径为可视区尺寸（容器高宽中较小一项）的 55% 长度。
+
+                        roseType: "angle",
+                        itemStyle: {
+                            normal: {
+                                shadowBlur: 200,
+                                shadowColor: "black"
+                            }
+                        }
+                    }, {
+                        center: ['75%', '50%'],
+
+                        seriesLayoutBy: "row",
+                        name: "案件類別",
+                        type: "pie", // 设置图表类型为饼图
+                        radius: "50%", // 饼图的半径，外半径为可视区尺寸（容器高宽中较小一项）的 55% 长度。
+
+                        roseType: "angle",
+                        itemStyle: {
+                            normal: {
+                                shadowBlur: 200,
+                                shadowColor: "black"
+                            }
+                        }
                     },
-                ],
+
+                ]
+            }
+
+
+            var option3 = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                },
+                series: {
+                    type: "sunburst",
+                    data: [
+                        {
+                            value: 10,
+                            children: [
+                                {
+                                    value: 3,
+                                    name: "Aa",
+                                    //設定Aa的顏色
+                                    itemStyle: {
+                                        color: "red"
+                                    }
+                                },
+                                {
+                                    value: 5,
+                                    name: "Ab"
+                                }
+                            ]
+                        },
+
+                    ],
+                    //設定整個圖的顏色
+                    itemStyle: {
+                        color: "black"
+                    },
+                    levels: [
+                        {
+                            // 留给数据下钻的节点属性
+                        },
+                        {
+                            //設定下一層的顏色
+                            itemStyle: {
+                                color: "blue"
+                            }
+                        }
+                    ]
+                }
             };
-            //初始化echarts实例
-            var myChart = echarts.init(document.getElementById('chartmain'));
 
-            //使用制定的配置项和数据显示图表
-            myChart.setOption(option);
-
+            var option4 = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                },
+                xAxis: {
+                    type: 'category',
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        type: 'line'
+                    }
+                ]
+            };
 
 
         </script>
-
-
-
     </body>
 
 </html>
